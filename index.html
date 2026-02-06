@@ -33,116 +33,130 @@
             100% { background-position: 0% 50%; }
         }
 
+        header { margin-top: 40px; text-align: center; }
+        h1 { font-size: 2.8rem; letter-spacing: 5px; text-shadow: 0 0 15px var(--pink); margin: 0; }
+        
+        .selector { display: flex; gap: 15px; margin: 25px 0; }
+        .card {
+            background: rgba(15, 15, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            min-width: 80px;
+        }
+        .card.active { border-color: var(--pink); box-shadow: 0 0 15px var(--pink); transform: scale(1.05); background: var(--indigo); }
+        .card i { font-size: 1.8rem; display: block; }
+
         .viewport {
             width: 85vw;
             max-width: 900px;
             aspect-ratio: 16/9;
             background: #000;
-            border: 1px solid rgba(251, 113, 133, 0.4);
             border-radius: 15px;
+            border: 1px solid rgba(251, 113, 133, 0.4);
             overflow: hidden;
-            margin-top: 20px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
-        .card {
-            background: rgba(30, 30, 50, 0.8);
-            padding: 15px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: 0.3s;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        .card.active { border-color: var(--pink); background: var(--indigo); box-shadow: 0 0 15px var(--pink); }
-
+        .controls { display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 25px 0; }
         .btn {
             background: #fff;
             color: #000;
+            border: none;
             padding: 12px 25px;
             border-radius: 8px;
-            cursor: pointer;
             font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
             display: none;
-            margin: 10px;
             text-transform: uppercase;
-            border: none;
         }
+        .btn:hover { background: var(--pink); color: #fff; }
 
+        .status { font-size: 0.8rem; font-weight: bold; color: var(--pink); height: 1.2rem; }
         input[type="file"] { display: none; }
-        .status { font-size: 0.8rem; height: 1.2rem; margin-top: 15px; color: #fb7185; font-weight: bold; }
+        .blobby-footer { margin-bottom: 20px; color: rgba(255,255,255,0.2); font-size: 0.7rem; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <h1 style="margin-top:40px; letter-spacing: 5px; text-shadow: 0 0 15px var(--pink);">BLOBBY 2</h1>
-    <p style="font-size: 0.7rem; opacity: 0.6; letter-spacing: 2px;">SHIMMER ENGINE ONLINE</p>
+    <header>
+        <h1>BLOBBY 2</h1>
+        <p style="color: var(--pink); font-size: 0.7rem; font-weight: bold; opacity: 0.7;">UNRESTRICTED SERVER MODE</p>
+    </header>
 
-    <div style="display:flex; gap:15px; margin: 20px;">
-        <div class="card" id="nds" onclick="sel('nds', 'nds')">📱<br>NDS</div>
-        <div class="card" id="ps2" onclick="sel('ps2', 'ps2')">💿<br>PS2</div>
-        <div class="card" id="gc" onclick="sel('gamecube', 'gc')">🧊<br>GC</div>
+    <div class="selector">
+        <div class="card" id="c-nds" onclick="select('nds', 'c-nds')"><i>📱</i><span>NDS</span></div>
+        <div class="card" id="c-ps2" onclick="select('ps2', 'c-ps2')"><i>💿</i><span>PS2</span></div>
+        <div class="card" id="c-gc" onclick="select('gamecube', 'c-gc')"><i>🧊</i><span>GC</span></div>
     </div>
 
     <div class="viewport">
         <div id="game" style="width:100%; height:100%;"></div>
     </div>
 
-    <div class="status" id="status-msg">Select a console to begin</div>
+    <div class="controls">
+        <div class="status" id="status-msg">Select a Console</div>
+        <div style="display:flex; gap:10px;">
+            <label for="bios-file" class="btn" id="l-bios">1. Load BIOS</label>
+            <input type="file" id="bios-file">
 
-    <div style="margin: 20px;">
-        <label for="b-file" class="btn" id="b-lab">1. Load BIOS</label>
-        <input type="file" id="b-file">
-
-        <label for="r-file" class="btn" id="r-lab">2. Launch Game</label>
-        <input type="file" id="r-file">
+            <label for="rom-file" class="btn" id="l-rom">2. Launch Game</label>
+            <input type="file" id="rom-file">
+        </div>
     </div>
 
-    <p style="color:rgba(255,255,255,0.2); font-size: 0.7rem; margin-bottom: 30px;">click to feed blobby</p>
+    <p class="blobby-footer">click to feed blobby</p>
 
     <script>
-        let cur = '';
+        let curCore = '';
         let bData = null;
+        const status = document.getElementById('status-msg');
 
-        function sel(c, id) {
-            document.querySelectorAll('.card').forEach(x => x.classList.remove('active'));
+        function select(type, id) {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            cur = c;
-            document.getElementById('b-lab').style.display = 'inline-block';
-            document.getElementById('status-msg').innerText = "Console Set. Now upload BIOS.";
+            curCore = type;
+            document.getElementById('l-bios').style.display = 'block';
+            status.innerText = "Console Set. Upload BIOS file.";
         }
 
-        document.getElementById('b-file').onchange = (e) => {
+        document.getElementById('bios-file').onchange = (e) => {
             const file = e.target.files[0];
-            if(file) {
-                if (file.size < 4000) {
-                    document.getElementById('status-msg').innerText = "File too small. Check BIOS file.";
-                    return;
-                }
+            if(file && file.size > 5000) {
                 bData = URL.createObjectURL(file);
-                document.getElementById('r-lab').style.display = 'inline-block';
-                document.getElementById('b-lab').innerText = "✅ BIOS OK";
-                document.getElementById('status-msg').innerText = "System Ready. Launch your ROM.";
+                document.getElementById('l-rom').style.display = 'block';
+                document.getElementById('l-bios').innerText = "✅ BIOS OK";
+                status.innerText = "System Ready. Launch your ROM.";
+            } else {
+                status.innerText = "Invalid BIOS file.";
             }
         };
 
-        document.getElementById('r-file').onchange = (e) => {
-            const rom = URL.createObjectURL(e.target.files[0]);
-            const cores = { 'nds': 'melonds', 'ps2': 'play', 'gamecube': 'dolphin' };
+        document.getElementById('rom-file').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file || !curCore) return;
+
+            const romUrl = URL.createObjectURL(file);
+            const coreMap = { 'nds': 'melonds', 'ps2': 'play', 'gamecube': 'dolphin' };
 
             window.EJS_player = '#game';
-            window.EJS_core = cores[cur];
-            window.EJS_gameUrl = rom;
+            window.EJS_core = coreMap[curCore];
+            window.EJS_gameUrl = romUrl;
             window.EJS_biosUrl = bData;
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
+            
+            // THE BYPASS FIX: Using the direct Githack mirror
+            window.EJS_pathtodata = 'https://rawcdn.githack.com/EmulatorJS/EmulatorJS/main/data/';
             window.EJS_startOnLoaded = true;
             window.EJS_threads = true; 
 
-            const s = document.createElement('script');
-            s.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
-            document.head.appendChild(s);
+            const script = document.createElement('script');
+            script.src = 'https://rawcdn.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js';
+            document.head.appendChild(script);
         };
     </script>
 </body>
